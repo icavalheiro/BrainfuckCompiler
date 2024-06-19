@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace BFC
 {
@@ -15,7 +16,6 @@ namespace BFC
         private static void Main(string[] args)
         {
             var file = args.FirstOrDefault(x => !x.StartsWith('-'));
-            // var file = "./hello.bf";
 
             if (string.IsNullOrEmpty(file))
             {
@@ -30,14 +30,14 @@ namespace BFC
                 PrintManual();
                 return;
             }
-            
+
             var flags = args
                 .Where(x => x.StartsWith('-'))
                 .Select(x => x.ToLower().Trim().TrimStart('-'));
 
             //read program from file
             var program = File.ReadAllText(file);
-            
+
             if (flags.Contains("c"))
             {
                 //TODO: Compile application
@@ -52,8 +52,20 @@ namespace BFC
 
         private static void InterpretProgram(string program)
         {
-            var interpreter = new Interpreter(program, Console.Write, Console.Read);
+            var sb = new StringBuilder();
+            var interpreter = new Interpreter(program, (c) =>
+            {
+                sb.Append(c);
+                // Console.Write(c);
+            }, () =>
+            {
+                Console.WriteLine(sb.ToString());
+                sb = new();
+                Console.Write("WAITING KEY");
+                return Console.Read();
+            });
             interpreter.Run();
+            Console.WriteLine(sb.ToString());
         }
     }
 }

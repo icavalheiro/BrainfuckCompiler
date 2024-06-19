@@ -9,7 +9,7 @@ namespace BFC
         private readonly Action<char> _outputFunction;
         private readonly Func<int> _inputFunction;
         private int _pointer;
-        private List<int> _memory;
+        private ushort[] _memory;
 
         public Interpreter(string program, Action<char> outputFunction, Func<int> inputFunction)
         {
@@ -21,14 +21,15 @@ namespace BFC
         private void Reset()
         {
             _pointer = 0;
-            _memory = new List<int> { 0 };
+            _memory = new ushort[32768];
+            Array.Fill(_memory, (ushort)0);
         }
 
         private void IncrementPointer()
         {
             _pointer++;
-            if(_pointer >= _memory.Count)
-                _memory.Add(0);
+            // if(_pointer >= _memory.Count)
+            //     _memory.Add(0);
         }
 
         private void DecrementPointer()
@@ -50,15 +51,15 @@ namespace BFC
             _memory[_pointer]--;
         }
 
+        private void InputAtCurrentPosition()
+        {
+            if (_inputFunction != null)
+                _memory[_pointer] = Convert.ToByte(_inputFunction());
+        }
+
         private void OutputCurrentPosition()
         {
             _outputFunction?.Invoke((char)_memory[_pointer]);
-        }
-        
-        private void InputAtCurrentPosition()
-        {
-            if(_inputFunction != null)
-                _memory[_pointer] = (int) _inputFunction();
         }
 
         private bool IsCurrentPositionZero()
@@ -109,14 +110,14 @@ namespace BFC
                     
                     case '[':
                         index = InterpretScope(index + 1);
-                        break;
-                    
+                        continue;
+
                     case ']':
                         if (IsCurrentPositionZero())
-                            return index;
+                            return index + 1;
 
-                        index = startingIndex-1;
-                        break;
+                        index = startingIndex;
+                        continue;
                 }
 
                 index++;
